@@ -73,6 +73,7 @@ class FeedEdit extends Component {
           this.setState({ imagePreview: null });
         });
     }
+    
     this.setState(prevState => {
       let isValid = true;
       for (const validator of prevState.postForm[input].validators) {

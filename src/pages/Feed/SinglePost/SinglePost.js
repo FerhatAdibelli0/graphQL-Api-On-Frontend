@@ -1,35 +1,36 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 
-import Image from '../../../components/Image/Image';
-import './SinglePost.css';
+import Image from "../../../components/Image/Image";
+import "./SinglePost.css";
 
 class SinglePost extends Component {
   state = {
-    title: '',
-    author: '',
-    date: '',
-    image: '',
-    content: ''
+    title: "",
+    author: "",
+    date: "",
+    image: "",
+    content: "",
   };
 
   componentDidMount() {
     const postId = this.props.match.params.postId;
-    fetch('URL')
-      .then(res => {
+    fetch("http://localhost:8000/feed/post/" + postId)
+      .then((res) => {
         if (res.status !== 200) {
-          throw new Error('Failed to fetch status');
+          throw new Error("Failed to fetch status");
         }
         return res.json();
       })
-      .then(resData => {
+      .then((resData) => {
         this.setState({
           title: resData.post.title,
           author: resData.post.creator.name,
-          date: new Date(resData.post.createdAt).toLocaleDateString('en-US'),
-          content: resData.post.content
+          image: "http://localhost:8000/" + resData.post.imageUrl,
+          date: new Date(resData.post.createdAt).toLocaleDateString("en-US"),
+          content: resData.post.content,
         });
       })
-      .catch(err => {
+      .catch((err) => {
         console.log(err);
       });
   }
