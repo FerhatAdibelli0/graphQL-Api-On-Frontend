@@ -37,8 +37,59 @@ class Feed extends Component {
       .catch(this.catchError);
 
     this.loadPosts();
-    openSocket("http://localhost:8000");
+
+    const socket = openSocket("http://localhost:8000");
+    socket.on("postsChannel", (data) => {
+      if (data.action === "posting") {
+        this.addPost(data.post);
+      } else if (data.action === "deleting") {
+        this.deletePost(data.post._id);
+      } else if (data.action === "updating") {
+        this.updatePost(data.post);
+      }
+    });
   }
+
+  deletePost = (postId) => {
+    this.setState((prevState) => {
+      let updatedPosts = [...prevState.posts];
+      updatedPosts = prevState.posts.filter((p) => p._id !== postId);
+      return {
+        posts: updatedPosts,
+        postsLoading: false,
+        totalPosts: prevState.totalPosts - 1,
+      };
+    });
+  };
+
+  addPost = (post) => {
+    this.setState((prevState) => {
+      const updatedPosts = [...prevState.posts];
+      if (prevState.postPage === 1) {
+        if (prevState.posts.length >= 2) {
+          updatedPosts.pop();
+        }
+        updatedPosts.unshift(post);
+      }
+      return {
+        posts: updatedPosts,
+        totalPosts: prevState.totalPosts + 1,
+      };
+    });
+  };
+
+  updatePost = (post) => {
+    this.setState((prevState) => {
+      const updatedPosts = [...prevState.posts];
+      const postIndex = prevState.posts.findIndex((p) => p._id === post._id);
+      if (postIndex >= -1) {
+        updatedPosts[postIndex] = post;
+      }
+      return {
+        posts: updatedPosts,
+      };
+    });
+  };
 
   loadPosts = (direction) => {
     if (direction) {
@@ -159,8 +210,6 @@ class Feed extends Component {
               (p) => p._id === prevState.editPost._id
             );
             updatedPosts[postIndex] = post;
-          } else if (prevState.posts.length < 2) {
-            updatedPosts = prevState.posts.concat(post);
           }
           return {
             posts: updatedPosts,
@@ -200,11 +249,11 @@ class Feed extends Component {
         return res.json();
       })
       .then((resData) => {
+        // this.setState((prevState) => {
+        //   const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
+        //   return { posts: updatedPosts, postsLoading: false };
+        // });
         console.log(resData);
-        this.setState((prevState) => {
-          const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
-          return { posts: updatedPosts, postsLoading: false };
-        });
       })
       .catch((err) => {
         console.log(err);
