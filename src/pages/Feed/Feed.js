@@ -1,5 +1,4 @@
 import React, { Component, Fragment } from "react";
-import openSocket from "socket.io-client";
 import Post from "../../components/Feed/Post/Post";
 import Button from "../../components/Button/Button";
 import FeedEdit from "../../components/Feed/FeedEdit/FeedEdit";
@@ -37,59 +36,7 @@ class Feed extends Component {
       .catch(this.catchError);
 
     this.loadPosts();
-
-    const socket = openSocket("http://localhost:8000");
-    socket.on("postsChannel", (data) => {
-      if (data.action === "posting") {
-        this.addPost(data.post);
-      } else if (data.action === "deleting") {
-        this.deletePost(data.post._id);
-      } else if (data.action === "updating") {
-        this.updatePost(data.post);
-      }
-    });
   }
-
-  deletePost = (postId) => {
-    this.setState((prevState) => {
-      let updatedPosts = [...prevState.posts];
-      updatedPosts = prevState.posts.filter((p) => p._id !== postId);
-      return {
-        posts: updatedPosts,
-        postsLoading: false,
-        totalPosts: prevState.totalPosts - 1,
-      };
-    });
-  };
-
-  addPost = (post) => {
-    this.setState((prevState) => {
-      const updatedPosts = [...prevState.posts];
-      if (prevState.postPage === 1) {
-        if (prevState.posts.length >= 2) {
-          updatedPosts.pop();
-        }
-        updatedPosts.unshift(post);
-      }
-      return {
-        posts: updatedPosts,
-        totalPosts: prevState.totalPosts + 1,
-      };
-    });
-  };
-
-  updatePost = (post) => {
-    this.setState((prevState) => {
-      const updatedPosts = [...prevState.posts];
-      const postIndex = prevState.posts.findIndex((p) => p._id === post._id);
-      if (postIndex >= -1) {
-        updatedPosts[postIndex] = post;
-      }
-      return {
-        posts: updatedPosts,
-      };
-    });
-  };
 
   loadPosts = (direction) => {
     if (direction) {
@@ -249,10 +196,10 @@ class Feed extends Component {
         return res.json();
       })
       .then((resData) => {
-        // this.setState((prevState) => {
-        //   const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
-        //   return { posts: updatedPosts, postsLoading: false };
-        // });
+        this.setState((prevState) => {
+          const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
+          return { posts: updatedPosts, postsLoading: false };
+        });
         console.log(resData);
       })
       .catch((err) => {
