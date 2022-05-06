@@ -124,31 +124,46 @@ class Feed extends Component {
     formData.append("title", postData.title);
     formData.append("content", postData.content);
     formData.append("image", postData.image);
-    let url = "http://localhost:8000/feed/post";
-    let method = "POST";
-    if (this.state.editPost) {
-      url = "http://localhost:8000/feed/post/" + this.state.editPost._id;
-      method = "PUT";
-    }
 
-    fetch(url, {
-      method: method,
-      body: formData,
-      headers: { Authorization: "Bearer " + this.props.token },
+    const graphqlQuery = {
+      query: `
+        mutation {
+    createPost(postInput: {title: "${postData.title}", content: "${postData.content}", imageUrl: "${postData.image}"}) {
+    _id,
+    title,
+    content,
+    createdAt,
+    creator {
+      name,
+    }
+  }
+}`,
+    };
+    fetch("http://localhost:8000/graphql", {
+      method: "POST",
+      body: JSON.stringify(graphqlQuery),
+      headers: {
+        Authorization: "Bearer " + this.props.token,
+        "Content-Type": "application/json",
+      },
     })
       .then((res) => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error("Creating or editing a post failed!");
-        }
         return res.json();
       })
       .then((resData) => {
+        console.log(resData.data.createPost);
+        if (resData.errors && resData.errors[0].statusCode === 422) {
+          throw new Error(resData.errors[0].message);
+        }
+        if (resData.errors) {
+          throw new Error("Creating post failed!");
+        }
         const post = {
-          _id: resData.post._id,
-          title: resData.post.title,
-          content: resData.post.content,
-          creator: resData.post.creator,
-          createdAt: resData.post.createdAt,
+          _id: resData.data.createPost._id,
+          title: resData.data.createPost.title,
+          content: resData.data.createPost.content,
+          creator: resData.data.createPost.creator,
+          createdAt: resData.data.createPost.createdAt,
         };
         this.setState((prevState) => {
           let updatedPosts = [...prevState.posts];
