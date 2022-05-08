@@ -59,6 +59,7 @@ class Feed extends Component {
       _id,
       title,
       content,
+      imageUrl,
       creator{
         name
       }
@@ -195,7 +196,6 @@ class Feed extends Component {
         if (resData.errors) {
           throw new Error("Creating post failed!");
         }
-        console.log(resData);
         const post = {
           _id: resData.data.createPost._id,
           title: resData.data.createPost.title,
